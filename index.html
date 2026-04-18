@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>切膚之愛居家服務試算表</title>
+  <style>
+    :root {
+      --primary: #ea580c;
+      --primary-light: #fff7ed;
+      --secondary: #f97316;
+      --danger: #dc2626;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-500: #6b7280;
+      --gray-700: #374151;
+      --gray-900: #111827;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Microsoft JhengHei', '微軟正黑體', sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+    header {
+      background: linear-gradient(135deg, #c2410c, #f97316);
+      color: white;
+      padding: 20px 24px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    header h1 { font-size: 22px; font-weight: 700; letter-spacing: 1px; }
+    header p { font-size: 13px; opacity: 0.85; margin-top: 4px; }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 20px 16px;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 20px;
+      align-items: start;
+    }
+    .main-content { display: flex; flex-direction: column; gap: 16px; }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .step-badge {
+      background: var(--primary);
+      color: white;
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 700; flex-shrink: 0;
+    }
+
+    /* CMS */
+    .cms-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+    .cms-btn {
+      border: 2px solid var(--gray-200);
+      background: white;
+      border-radius: 10px;
+      padding: 12px 6px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .cms-btn:hover { border-color: var(--primary); background: var(--primary-light); }
+    .cms-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
+    .cms-btn .level { font-size: 16px; font-weight: 700; }
+    .cms-btn .budget { font-size: 10px; margin-top: 4px; opacity: 0.75; }
+
+    /* Identity */
+    .identity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .identity-btn {
+      border: 2px solid var(--gray-200);
+      background: white;
+      border-radius: 10px;
+      padding: 14px;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .identity-btn:hover { border-color: var(--secondary); background: #ecfeff; }
+    .identity-btn.active { border-color: var(--secondary); background: var(--secondary); color: white; }
+    .identity-btn .name { font-size: 16px; font-weight: 700; }
+    .identity-btn .rate { font-size: 12px; margin-top: 4px; opacity: 0.8; }
+
+    /* Tabs */
+    .tabs { display: flex; border-bottom: 2px solid var(--gray-200); margin-bottom: 16px; }
+    .tab-btn {
+      padding: 10px 22px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-500);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+    .tab-btn:hover { color: var(--primary); }
+    .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 700; }
+
+    /* Table */
+    .service-table { width: 100%; border-collapse: collapse; }
+    .service-table th {
+      background: var(--gray-50);
+      padding: 10px 12px;
+      text-align: left;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      border-bottom: 2px solid var(--gray-200);
+    }
+    .service-table td {
+      padding: 9px 12px;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 14px;
+      vertical-align: middle;
+    }
+    .service-table tr:hover td { background: #f8faff; }
+    .service-table tr.has-qty td { background: var(--primary-light); }
+    .service-code {
+      font-size: 11px; font-weight: 700;
+      color: var(--primary); font-family: monospace;
+    }
+    .service-note { font-size: 11px; color: var(--gray-500); margin-top: 2px; }
+    .price-cell { font-weight: 600; color: var(--gray-700); white-space: nowrap; }
+    .copay-cell { color: var(--danger); font-weight: 600; white-space: nowrap; }
+
+    /* Qty Control */
+    .qty-control { display: flex; align-items: center; gap: 6px; }
+    .qty-btn {
+      width: 28px; height: 28px;
+      border: 1px solid var(--gray-300);
+      background: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.15s;
+      color: var(--gray-700);
+      line-height: 1;
+    }
+    .qty-btn:hover { background: var(--primary); border-color: var(--primary); color: white; }
+    .qty-input {
+      width: 50px;
+      text-align: center;
+      border: 1px solid var(--gray-300);
+      border-radius: 6px;
+      padding: 4px;
+      font-size: 14px;
+      font-family: inherit;
+    }
+    .qty-input:focus { outline: none; border-color: var(--primary); }
+
+    /* Sidebar */
+    .sidebar { position: sticky; top: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+    .budget-card {
+      background: linear-gradient(135deg, #c2410c, #f97316);
+      color: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .budget-card h3 { font-size: 14px; opacity: 0.9; margin-bottom: 16px; font-weight: 600; }
+
+    .budget-item { margin-bottom: 16px; }
+    .budget-label { font-size: 12px; opacity: 0.85; margin-bottom: 5px; }
+    .budget-amounts { display: flex; justify-content: space-between; align-items: baseline; }
+    .budget-used { font-size: 20px; font-weight: 700; }
+    .budget-total { font-size: 12px; opacity: 0.8; }
+    .budget-bar {
+      height: 7px;
+      background: rgba(255,255,255,0.25);
+      border-radius: 4px;
+      margin-top: 6px;
+      overflow: hidden;
+    }
+    .budget-bar-fill {
+      height: 100%;
+      background: white;
+      border-radius: 4px;
+      transition: width 0.3s;
+      max-width: 100%;
+    }
+    .budget-bar-fill.over { background: #fca5a5; }
+
+    .budget-remaining {
+      text-align: center;
+      padding: 12px;
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      margin-top: 4px;
+    }
+    .budget-remaining .r-label { font-size: 12px; opacity: 0.9; }
+    .budget-remaining .r-amount { font-size: 24px; font-weight: 700; margin-top: 3px; }
+    .budget-remaining.over { background: rgba(239,68,68,0.3); }
+    .over-text { font-size: 11px; opacity: 0.85; margin-top: 3px; }
+
+    .detail-card {
+      background: white;
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+    }
+    .detail-card h3 { font-size: 14px; font-weight: 700; color: var(--gray-700); margin-bottom: 12px; }
+    .detail-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      padding: 7px 0;
+      border-bottom: 1px solid var(--gray-100);
+      font-size: 13px;
+      gap: 8px;
+    }
+    .detail-item:last-child { border-bottom: none; }
+    .detail-left { flex: 1; }
+    .detail-code-label { font-size: 11px; color: var(--gray-500); font-family: monospace; }
+    .detail-name { color: var(--gray-700); }
+    .detail-amount { font-weight: 600; color: var(--danger); white-space: nowrap; }
+    .detail-empty { color: var(--gray-500); font-size: 13px; text-align: center; padding: 20px 0; }
+
+    .total-divider { border: none; border-top: 2px solid var(--gray-200); margin: 8px 0 4px; }
+    .total-row {
+      display: flex;
+      justify-content: space-between;
+      font-weight: 700;
+      font-size: 15px;
+      color: var(--gray-900);
+      padding-top: 4px;
+    }
+
+    .hint-text { font-size: 12px; color: var(--gray-500); margin-top: 10px; line-height: 1.7; }
+
+    @media (max-width: 900px) {
+      .container { grid-template-columns: 1fr; }
+      .cms-grid { grid-template-columns: repeat(4, 1fr); }
+      .sidebar { position: static; }
+    }
+    @media (max-width: 600px) {
+      .cms-grid { grid-template-columns: repeat(3, 1fr); }
+      .identity-grid { grid-template-columns: 1fr 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>切膚之愛居家服務試算表</h1>
+  <p>依 CMS 等級與身分別，試算居家服務、喘息及短照費用（資料來源：彰化縣長照服務收費參考表）</p>
+</header>
+
+<div class="container">
+  <div class="main-content">
+
+    <!-- Step 1 -->
+    <div class="card">
+      <div class="card-title">
+        <span class="step-badge">1</span>
+        選擇 CMS 等級
+      </div>
+      <div class="cms-grid" id="cmsGrid"></div>
+      <p class="hint-text">※ CMS 等級由照顧管理專員評估後核定　※ CMS 第1級不符長照服務申請資格</p>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="card">
+      <div class="card-title">
+        <span class="step-badge">2</span>
+        選擇身分別
+      </div>
+      <div class="identity-grid" id="identityGrid"></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="card">
+      <div class="card-title">
+        <span class="step-badge">3</span>
+        選擇服務項目與數量
+      </div>
+      <div class="tabs" id="tabBar">
+        <button class="tab-btn active" onclick="switchTab('BA')">居家服務（BA）</button>
+        <button class="tab-btn" onclick="switchTab('respite')">居家喘息</button>
+        <button class="tab-btn" onclick="switchTab('oldShort')">喘息服務</button>
+        <button class="tab-btn" onclick="switchTab('shortCare')">短照服務</button>
+      </div>
+      <div id="serviceContent"></div>
+      <p class="hint-text" id="tabHint"></p>
+    </div>
+
+  </div>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="budget-card">
+      <h3>📊 費用試算結果</h3>
+
+      <div class="budget-item">
+        <div class="budget-label">照顧及專業服務　月額度使用</div>
+        <div class="budget-amounts">
+          <span class="budget-used" id="baUsedEl">$0</span>
+          <span class="budget-total" id="baTotalEl">/ 未選擇等級</span>
+        </div>
+        <div class="budget-bar">
+          <div class="budget-bar-fill" id="baBarFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="budget-remaining" id="baRemaining">
+        <div class="r-label">本月剩餘額度</div>
+        <div class="r-amount" id="baRemainingAmt">$—</div>
+      </div>
+
+      <div class="budget-item" style="margin-top:18px">
+        <div class="budget-label">喘息服務　年度額度使用</div>
+        <div class="budget-amounts">
+          <span class="budget-used" id="respUsedEl">$0</span>
+          <span class="budget-total" id="respTotalEl">/ 未選擇等級</span>
+        </div>
+        <div class="budget-bar">
+          <div class="budget-bar-fill" id="respBarFill" style="width:0%"></div>
+        </div>
+      </div>
+
+      <div class="budget-item" style="margin-top:14px">
+        <div class="budget-label">短照服務　年度額度使用</div>
+        <div class="budget-amounts">
+          <span class="budget-used" id="scUsedEl">$0</span>
+          <span class="budget-total" id="scTotalEl">/ 未選擇等級</span>
+        </div>
+        <div class="budget-bar">
+          <div class="budget-bar-fill" id="scBarFill" style="width:0%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="detail-card">
+      <h3>自付費用明細</h3>
+      <div id="detailList">
+        <div class="detail-empty">尚未選擇服務項目</div>
+      </div>
+      <div id="totalSection" style="display:none">
+        <hr class="total-divider">
+        <div class="total-row">
+          <span>合計自付金額</span>
+          <span id="totalAmountEl" style="color:var(--danger)">$0</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== 資料 =====
+  const CMS_LEVELS = {
+    2: { budget: 10020, respite: 32340, shortCare: 87780 },
+    3: { budget: 15460, respite: 32340, shortCare: 87780 },
+    4: { budget: 18580, respite: 32340, shortCare: 87780 },
+    5: { budget: 24100, respite: 32340, shortCare: 87780 },
+    6: { budget: 28070, respite: 32340, shortCare: 87780 },
+    7: { budget: 32090, respite: 48510, shortCare: 71610 },
+    8: { budget: 36180, respite: 48510, shortCare: 71610 },
+  };
+
+  const IDENTITIES = [
+    { id: 'general', name: '一般戶',    rate: 0.16, label: '部分負擔 16%' },
+    { id: 'midlow',  name: '中低收入戶', rate: 0.05, label: '部分負擔 5%'  },
+    { id: 'low',     name: '低收入戶',  rate: 0,    label: '免部分負擔'   },
+  ];
+
+  const SERVICES = {
+    BA: [
+      { code: 'BA01',  name: '基本身體清潔',           price: 260, note: '必要時可早晚各使用一組合' },
+      { code: 'BA02',  name: '基本日常照顧',           price: 195, note: '30分鐘為1單位' },
+      { code: 'BA03',  name: '測量生命徵象',           price:  35, note: '血壓、體溫、脈搏、呼吸' },
+      { code: 'BA04',  name: '協助餵食或灌食',         price: 130 },
+      { code: 'BA05',  name: '餐食照顧',               price: 310 },
+      { code: 'BA07',  name: '協助沐浴及洗頭',         price: 325 },
+      { code: 'BA08',  name: '足部照護',               price: 500, note: '照服員需受訓後才可做此項目' },
+      { code: 'BA10',  name: '翻身拍背',               price: 155 },
+      { code: 'BA11',  name: '肢體關節活動',           price: 195 },
+      { code: 'BA12',  name: '協助上(下)樓梯',         price: 130 },
+      { code: 'BA13',  name: '陪同外出',               price: 195, note: '每30分鐘為1支付單位' },
+      { code: 'BA14',  name: '陪同就醫',               price: 685, note: '當日1.5小時內' },
+      { code: 'BA15',  name: '家務協助（獨）',         price: 195, note: '本人-30分鐘為1支付單位' },
+      { code: 'BA16',  name: '代購/代領/代送服務（獨）',price: 130 },
+      { code: 'BA17a', name: '人工氣道管內分泌物抽吸', price:  75, note: '1日3組合為限' },
+      { code: 'BA17b', name: '口鼻抽吸',               price:  65, note: '1日3組合為限' },
+      { code: 'BA17c', name: '管路清潔（尿管、鼻胃管）',price:  50, note: '1週7組合為限' },
+      { code: 'BA17d', name: '甘油球通便、血糖機驗血糖',price:  50, note: '每日1組合' },
+      { code: 'BA17e', name: '依指示置入藥盒',         price:  50, note: '1週1組合為限' },
+      { code: 'BA18',  name: '安全看視',               price: 200, note: '30分鐘為1單位' },
+      { code: 'BA20',  name: '陪伴服務',               price: 175, note: '30分鐘為1單位' },
+      { code: 'BA22',  name: '巡視服務',               price: 130, note: '6AM~6PM至案家探視3次以上為1單位' },
+      { code: 'BA23',  name: '協助洗頭',               price: 200 },
+      { code: 'BA24',  name: '協助排泄',               price: 220 },
+    ],
+    respite: [
+      { code: 'GA09', name: '居家喘息', price: 770, note: '2小時為1單位，每次最多5單位' },
+    ],
+    oldShort: [
+      { code: 'GA03', name: '日照喘息（全日）',     price: 1250, note: '日間照顧中心全日' },
+      { code: 'GA04', name: '日照喘息（半日）',     price:  625, note: '日間照顧中心半日' },
+      { code: 'GA05', name: '機構住宿式喘息',       price: 2310, note: '14天/21天' },
+      { code: 'GA06', name: '小規機喘息－夜間喘息', price: 2000 },
+      { code: 'GA07', name: '巷弄長照站臨托',       price:  170, note: '1小時為1單位' },
+    ],
+    shortCare: [
+      { code: 'SC01', name: '日間照顧中心短照服務（全日）', price: 1250, note: '日間照顧中心全日' },
+      { code: 'SC02', name: '日間照顧中心短照服務（半日）', price:  625, note: '日間照顧中心半日' },
+      { code: 'SC03', name: '機構住宿式短照服務',           price: 2310, note: '每日計算' },
+      { code: 'SC04', name: '小規模多機能（夜間短照）',     price: 2000 },
+      { code: 'SC05', name: '巷弄長照站短照服務',           price:  170, note: '1小時為1單位' },
+      { code: 'SC06', name: '居家短照服務',                 price:  770, note: '2小時為1單位' },
+    ],
+  };
+
+  const TAB_HINTS = {
+    BA:        '※ BA碼服務費用計入每月照顧及專業服務額度',
+    respite:   '※ 居家喘息費用計入年度喘息服務額度（每次最多5單位）',
+    oldShort:  '※ 喘息服務費用計入年度喘息服務額度（第2~6級每年32,340元；第7~8級每年48,510元）',
+    shortCare: '※ 短照服務費用計入年度短照服務額度（第2~6級每年87,780元；第7~8級每年71,610元）',
+  };
+
+  // ===== 狀態 =====
+  let selectedCMS = null;
+  let selectedIdentity = null;
+  let quantities = {};
+  let currentTab = 'BA';
+
+  // ===== 渲染 CMS =====
+  function renderCMS() {
+    document.getElementById('cmsGrid').innerHTML =
+      Object.entries(CMS_LEVELS).map(([lv, d]) => `
+        <button class="cms-btn ${selectedCMS == lv ? 'active' : ''}" onclick="selectCMS(${lv})">
+          <div class="level">第${lv}級</div>
+          <div class="budget">${d.budget.toLocaleString()}元/月</div>
+        </button>
+      `).join('');
+  }
+
+  // ===== 渲染身分別 =====
+  function renderIdentity() {
+    document.getElementById('identityGrid').innerHTML =
+      IDENTITIES.map(id => `
+        <button class="identity-btn ${selectedIdentity === id.id ? 'active' : ''}"
+                onclick="selectIdentity('${id.id}')">
+          <div class="name">${id.name}</div>
+          <div class="rate">${id.label}</div>
+        </button>
+      `).join('');
+  }
+
+  // ===== 切換分頁 =====
+  function switchTab(tab) {
+    currentTab = tab;
+    const tabs = ['BA', 'respite', 'oldShort', 'shortCare'];
+    document.querySelectorAll('.tab-btn').forEach((btn, i) => {
+      btn.classList.toggle('active', tabs[i] === tab);
+    });
+    renderServices();
+  }
+
+  // ===== 渲染服務表格 =====
+  function renderServices() {
+    const services = SERVICES[currentTab];
+    const rate = IDENTITIES.find(i => i.id === selectedIdentity)?.rate ?? 0.16;
+
+    const rows = services.map(s => {
+      const qty = quantities[s.code] || 0;
+      const copay = Math.floor(s.price * rate);
+      return `
+        <tr class="${qty > 0 ? 'has-qty' : ''}">
+          <td><div class="service-code">${s.code}</div></td>
+          <td>
+            <div>${s.name}</div>
+            ${s.note ? `<div class="service-note">${s.note}</div>` : ''}
+          </td>
+          <td class="price-cell">$${s.price.toLocaleString()}</td>
+          <td class="copay-cell">$${copay.toLocaleString()}</td>
+          <td>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty('${s.code}',-1)">−</button>
+              <input class="qty-input" type="number" min="0" value="${qty}"
+                onchange="setQty('${s.code}',this.value)"
+                oninput="setQty('${s.code}',this.value)">
+              <button class="qty-btn" onclick="changeQty('${s.code}',1)">＋</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    document.getElementById('serviceContent').innerHTML = `
+      <table class="service-table">
+        <thead>
+          <tr>
+            <th style="width:70px">碼別</th>
+            <th>服務項目</th>
+            <th style="width:85px">單價</th>
+            <th style="width:90px">自付/次</th>
+            <th style="width:145px">數量（次）</th>
+          </tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    document.getElementById('tabHint').textContent = TAB_HINTS[currentTab];
+  }
+
+  // ===== 動作 =====
+  function selectCMS(lv) {
+    selectedCMS = lv;
+    renderCMS();
+    updateCalc();
+  }
+
+  function selectIdentity(id) {
+    selectedIdentity = id;
+    renderIdentity();
+    renderServices();
+    updateCalc();
+  }
+
+  function changeQty(code, delta) {
+    quantities[code] = Math.max(0, (quantities[code] || 0) + delta);
+    renderServices();
+    updateCalc();
+  }
+
+  function setQty(code, val) {
+    quantities[code] = Math.max(0, parseInt(val) || 0);
+    updateCalc();
+  }
+
+  // ===== 試算 =====
+  function updateCalc() {
+    const cms = selectedCMS ? CMS_LEVELS[selectedCMS] : null;
+    const rate = IDENTITIES.find(i => i.id === selectedIdentity)?.rate ?? 0.16;
+
+    const allServices = [...SERVICES.BA, ...SERVICES.respite, ...SERVICES.oldShort, ...SERVICES.shortCare];
+    const baCodes = new Set(SERVICES.BA.map(s => s.code));
+    const respCodes = new Set([...SERVICES.respite, ...SERVICES.oldShort].map(s => s.code));
+    const scCodes = new Set(SERVICES.shortCare.map(s => s.code));
+
+    let baTotal = 0, respTotal = 0, scTotal = 0;
+    let baSelf = 0, respSelf = 0, scSelf = 0;
+    const selectedItems = [];
+
+    allServices.forEach(s => {
+      const qty = quantities[s.code] || 0;
+      if (!qty) return;
+      const total = s.price * qty;
+      const self  = Math.floor(s.price * rate) * qty;
+      if (baCodes.has(s.code))   { baTotal += total; baSelf += self; }
+      else if (scCodes.has(s.code)) { scTotal += total; scSelf += self; }
+      else                          { respTotal += total; respSelf += self; }
+      selectedItems.push({ ...s, qty, self });
+    });
+
+    // 月額度
+    const monthlyBudget = cms?.budget ?? 0;
+    document.getElementById('baUsedEl').textContent = `$${baTotal.toLocaleString()}`;
+    document.getElementById('baTotalEl').textContent = cms
+      ? `/ $${monthlyBudget.toLocaleString()}`
+      : '/ 請先選擇等級';
+
+    const baPct = monthlyBudget > 0 ? Math.min(100, baTotal / monthlyBudget * 100) : 0;
+    const baBar = document.getElementById('baBarFill');
+    baBar.style.width = baPct + '%';
+    baBar.className = 'budget-bar-fill' + (baTotal > monthlyBudget && cms ? ' over' : '');
+
+    const remaining = monthlyBudget - baTotal;
+    const remEl = document.getElementById('baRemaining');
+    document.getElementById('baRemainingAmt').textContent = cms
+      ? `$${remaining.toLocaleString()}`
+      : '$—';
+    remEl.className = 'budget-remaining' + (remaining < 0 && cms ? ' over' : '');
+
+    // 年度喘息額度
+    const yearlyRespite = cms?.respite ?? 0;
+    document.getElementById('respUsedEl').textContent = `$${respTotal.toLocaleString()}`;
+    document.getElementById('respTotalEl').textContent = cms
+      ? `/ $${yearlyRespite.toLocaleString()}`
+      : '/ 請先選擇等級';
+    const respPct = yearlyRespite > 0 ? Math.min(100, respTotal / yearlyRespite * 100) : 0;
+    const respBar = document.getElementById('respBarFill');
+    respBar.style.width = respPct + '%';
+    respBar.className = 'budget-bar-fill' + (respTotal > yearlyRespite && cms ? ' over' : '');
+
+    // 年度短照額度
+    const yearlyShortCare = cms?.shortCare ?? 0;
+    document.getElementById('scUsedEl').textContent = `$${scTotal.toLocaleString()}`;
+    document.getElementById('scTotalEl').textContent = cms
+      ? `/ $${yearlyShortCare.toLocaleString()}`
+      : '/ 請先選擇等級';
+    const scPct = yearlyShortCare > 0 ? Math.min(100, scTotal / yearlyShortCare * 100) : 0;
+    const scBar = document.getElementById('scBarFill');
+    scBar.style.width = scPct + '%';
+    scBar.className = 'budget-bar-fill' + (scTotal > yearlyShortCare && cms ? ' over' : '');
+
+    // 明細
+    const detailList = document.getElementById('detailList');
+    const totalSection = document.getElementById('totalSection');
+    if (!selectedItems.length) {
+      detailList.innerHTML = '<div class="detail-empty">尚未選擇服務項目</div>';
+      totalSection.style.display = 'none';
+    } else {
+      detailList.innerHTML = selectedItems.map(s => `
+        <div class="detail-item">
+          <div class="detail-left">
+            <div class="detail-code-label">${s.code}</div>
+            <div class="detail-name">${s.name} × ${s.qty}</div>
+          </div>
+          <div class="detail-amount">$${s.self.toLocaleString()}</div>
+        </div>
+      `).join('');
+      totalSection.style.display = 'block';
+      document.getElementById('totalAmountEl').textContent =
+        `$${(baSelf + respSelf + scSelf).toLocaleString()}`;
+    }
+  }
+
+  // ===== 初始化 =====
+  renderCMS();
+  renderIdentity();
+  renderServices();
+</script>
+</body>
+</html>
