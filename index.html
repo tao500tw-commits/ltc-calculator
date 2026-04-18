@@ -262,6 +262,47 @@
 
     .hint-text { font-size: 12px; color: var(--gray-500); margin-top: 10px; line-height: 1.7; }
 
+    /* 個案姓名輸入 */
+    .name-input {
+      width: 100%;
+      border: 2px solid var(--gray-200);
+      border-radius: 8px;
+      padding: 10px 14px;
+      font-size: 15px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .name-input:focus { outline: none; border-color: var(--primary); }
+
+    /* 列印按鈕 */
+    .print-btn {
+      width: 100%;
+      padding: 12px;
+      background: linear-gradient(135deg, #c2410c, #f97316);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: 1px;
+      transition: opacity 0.2s;
+    }
+    .print-btn:hover { opacity: 0.88; }
+
+    /* 月小計標籤 */
+    .monthly-tag {
+      display: inline-block;
+      background: var(--primary-light);
+      color: var(--primary);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      margin-top: 3px;
+    }
+
     @media (max-width: 900px) {
       .container { grid-template-columns: 1fr; }
       .cms-grid { grid-template-columns: repeat(4, 1fr); }
@@ -271,6 +312,52 @@
       .cms-grid { grid-template-columns: repeat(3, 1fr); }
       .identity-grid { grid-template-columns: 1fr 1fr 1fr; }
     }
+
+    /* ===== 列印樣式 ===== */
+    @media print {
+      * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      body { background: white; font-size: 12px; }
+      header { background: #ea580c !important; padding: 12px 20px; }
+      header h1 { font-size: 16px; }
+      header p { display: none; }
+
+      .container { display: block; padding: 0; }
+      .main-content { display: none; }
+      .sidebar { position: static; display: block; }
+
+      .budget-card { background: #ea580c !important; border-radius: 8px; padding: 14px; margin-bottom: 12px; }
+      .detail-card { box-shadow: none; border: 1px solid #e5e7eb; padding: 14px; }
+
+      .print-btn, .cms-grid, .identity-grid, .tabs { display: none; }
+
+      /* 列印專用個案資訊區塊 */
+      .print-header {
+        display: block !important;
+        background: #fff7ed;
+        border: 2px solid #ea580c;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-bottom: 14px;
+      }
+      .print-header table { width: 100%; border-collapse: collapse; }
+      .print-header td { padding: 4px 8px; font-size: 13px; }
+      .print-header td:first-child { font-weight: 700; color: #ea580c; width: 80px; }
+
+      .print-footer {
+        display: block !important;
+        margin-top: 24px;
+        border-top: 1px solid #e5e7eb;
+        padding-top: 12px;
+        font-size: 11px;
+        color: #6b7280;
+        display: flex;
+        justify-content: space-between;
+      }
+    }
+
+    /* 螢幕上隱藏列印專用區塊 */
+    .print-header { display: none; }
+    .print-footer { display: none; }
   </style>
 </head>
 <body>
@@ -282,6 +369,15 @@
 
 <div class="container">
   <div class="main-content">
+
+    <!-- 個案姓名 -->
+    <div class="card">
+      <div class="card-title" style="margin-bottom:12px">
+        <span class="step-badge">0</span>
+        個案姓名（列印用）
+      </div>
+      <input class="name-input" type="text" id="caseNameInput" placeholder="請輸入個案姓名…">
+    </div>
 
     <!-- Step 1 -->
     <div class="card">
@@ -365,18 +461,38 @@
     </div>
 
     <div class="detail-card">
-      <h3>自付費用明細</h3>
+      <h3>月費用明細</h3>
       <div id="detailList">
         <div class="detail-empty">尚未選擇服務項目</div>
       </div>
       <div id="totalSection" style="display:none">
         <hr class="total-divider">
+        <div class="total-row" style="font-size:13px; color:var(--gray-500); font-weight:400; margin-bottom:4px">
+          <span>月服務總金額</span>
+          <span id="totalServiceEl">$0</span>
+        </div>
         <div class="total-row">
-          <span>合計自付金額</span>
+          <span>每月自付合計</span>
           <span id="totalAmountEl" style="color:var(--danger)">$0</span>
         </div>
       </div>
     </div>
+
+    <!-- 列印專用資訊（列印時顯示） -->
+    <div class="print-header" id="printHeader">
+      <table>
+        <tr><td>個案姓名</td><td id="printName">—</td></tr>
+        <tr><td>CMS 等級</td><td id="printCMS">—</td></tr>
+        <tr><td>身分別</td><td id="printIdentity">—</td></tr>
+        <tr><td>列印日期</td><td id="printDate">—</td></tr>
+      </table>
+    </div>
+    <div class="print-footer">
+      <span>切膚之愛居家服務試算表</span>
+      <span>資料來源：彰化縣長照服務收費參考表</span>
+    </div>
+
+    <button class="print-btn" onclick="handlePrint()">🖨️ 列印 / 匯出 PDF</button>
   </div>
 </div>
 
@@ -529,7 +645,7 @@
             <th>服務項目</th>
             <th style="width:85px">單價</th>
             <th style="width:90px">自付/次</th>
-            <th style="width:145px">數量（次）</th>
+            <th style="width:145px">每月次數</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -636,19 +752,40 @@
       detailList.innerHTML = '<div class="detail-empty">尚未選擇服務項目</div>';
       totalSection.style.display = 'none';
     } else {
-      detailList.innerHTML = selectedItems.map(s => `
+      detailList.innerHTML = selectedItems.map(s => {
+        const monthlyService = s.price * s.qty;
+        return `
         <div class="detail-item">
           <div class="detail-left">
             <div class="detail-code-label">${s.code}</div>
-            <div class="detail-name">${s.name} × ${s.qty}</div>
+            <div class="detail-name">${s.name} × ${s.qty} 次</div>
+            <div class="monthly-tag">月服務費 $${monthlyService.toLocaleString()}</div>
           </div>
-          <div class="detail-amount">$${s.self.toLocaleString()}</div>
+          <div class="detail-amount">自付 $${s.self.toLocaleString()}</div>
         </div>
-      `).join('');
+      `}).join('');
       totalSection.style.display = 'block';
+      const totalService = baTotal + respTotal + scTotal;
+      document.getElementById('totalServiceEl').textContent = `$${totalService.toLocaleString()}`;
       document.getElementById('totalAmountEl').textContent =
         `$${(baSelf + respSelf + scSelf).toLocaleString()}`;
     }
+  }
+
+  // ===== 列印 =====
+  function handlePrint() {
+    const name     = document.getElementById('caseNameInput').value.trim() || '（未填）';
+    const cmsLabel = selectedCMS ? `第 ${selectedCMS} 級（${CMS_LEVELS[selectedCMS].budget.toLocaleString()} 元/月）` : '（未選擇）';
+    const idLabel  = IDENTITIES.find(i => i.id === selectedIdentity)?.name || '（未選擇）';
+    const today    = new Date();
+    const dateStr  = `${today.getFullYear()}/${today.getMonth()+1}/${today.getDate()}`;
+
+    document.getElementById('printName').textContent     = name;
+    document.getElementById('printCMS').textContent      = cmsLabel;
+    document.getElementById('printIdentity').textContent = idLabel;
+    document.getElementById('printDate').textContent     = dateStr;
+
+    window.print();
   }
 
   // ===== 初始化 =====
